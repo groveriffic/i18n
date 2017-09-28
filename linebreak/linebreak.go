@@ -162,12 +162,43 @@ type Scanner struct {
 // It can be called successively to find all actions until the end
 // of the input, when it returns io.EOF as error.
 func (s *Scanner) Next() (pos int, action BreakAction, err error) {
-	var cls BreakClass
-
 	// Now read the next rune and decide what to do.
 	// We handle spaces manually, and anything else using PairTable.
 	pos = s.pos
-	cls, err = s.nextClass()
+
+	if s.err != nil {
+		err = s.err
+		action = BreakMandatory
+		return
+	}
+
+	if pos >= len(s.runes) {
+		s.err = io.EOF
+		err = s.err
+		action = BreakMandatory
+		return
+	}
+
+	sot := s.pos == 0
+	cls := s.Resolver(s.runes[s.pos])
+	s.pos += 1
+	switch cls {
+	case ClassNL:
+		// Equivalent; simplifies code:
+		// "The NL class acts like BK in all respects (there is a
+		// mandatory break after any NEL character)."
+		cls = ClassBK
+	case ClassSP:
+		// Special case for start of text.
+		if sot {
+			cls = ClassWJ
+		}
+	case ClassLF:
+		// Special case for start of text.
+		if sot {
+			cls = ClassBK
+		}
+	}
 
 	if err != nil {
 		// LB3 Always break at the end of text.
@@ -175,7 +206,7 @@ func (s *Scanner) Next() (pos int, action BreakAction, err error) {
 		return
 	}
 
-	if s.pos == 0 {
+	if sot {
 		// LB2 Never break at the start of text.
 		s.prevClass = cls
 		action = BreakProhibited
@@ -248,39 +279,5 @@ func (s *Scanner) Next() (pos int, action BreakAction, err error) {
 
 	// Save cls of "before" character.
 	s.prevClass = cls
-	return
-}
-
-// nextClass returns the next line breaking class in the input.
-func (s *Scanner) nextClass() (cls BreakClass, err error) {
-	if s.err != nil {
-		err = s.err
-		return
-	}
-	if s.pos >= len(s.runes) {
-		s.err = io.EOF
-		err = s.err
-		return
-	}
-	sot := s.pos == 0
-	cls = s.Resolver(s.runes[s.pos])
-	s.pos += 1
-	switch cls {
-	case ClassNL:
-		// Equivalent; simplifies code:
-		// "The NL class acts like BK in all respects (there is a
-		// mandatory break after any NEL character)."
-		cls = ClassBK
-	case ClassSP:
-		// Special case for start of text.
-		if sot {
-			cls = ClassWJ
-		}
-	case ClassLF:
-		// Special case for start of text.
-		if sot {
-			cls = ClassBK
-		}
-	}
 	return
 }
