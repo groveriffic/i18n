@@ -77,8 +77,8 @@ func (t PairTable) Action(before, after BreakClass) BreakAction {
 //
 //     http://www.unicode.org/reports/tr14/#Table2
 var pairTable = PairTable{
-//   after:
-//   OP  CL  CP  QU  GL  NS  EX  SY  IS  PR  PO  NU  AL  HL  ID  IN  HY  BA  BB  B2  ZW  CM  WJ  H2  H3  JL  JV  JT  RI   // before:
+	//   after:
+	//   OP  CL  CP  QU  GL  NS  EX  SY  IS  PR  PO  NU  AL  HL  ID  IN  HY  BA  BB  B2  ZW  CM  WJ  H2  H3  JL  JV  JT  RI   // before:
 	{pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, pr, cp, pr, pr, pr, pr, pr, pr, pr}, // OP
 	{di, pr, pr, in, in, pr, pr, pr, pr, in, in, di, di, di, di, di, in, in, di, di, pr, ci, pr, di, di, di, di, di, di}, // CL
 	{di, pr, pr, in, in, pr, pr, pr, pr, in, in, in, in, in, di, di, in, in, di, di, pr, ci, pr, di, di, di, di, di, di}, // CP
@@ -164,26 +164,21 @@ type Scanner struct {
 func (s *Scanner) Next() (pos int, action BreakAction, err error) {
 	var cls BreakClass
 
-	// Read start of text and set prevClass.
-	if s.pos == 0 {
-		cls, err = s.nextClass()
-		if err != nil {
-			// Always break at the end.
-			action = BreakMandatory
-			return
-		}
-		s.prevClass = cls
-		action = BreakProhibited
-		return
-	}
-
 	// Now read the next rune and decide what to do.
 	// We handle spaces manually, and anything else using PairTable.
 	pos = s.pos
 	cls, err = s.nextClass()
+
 	if err != nil {
-		// Always break at the end.
+		// LB3 Always break at the end of text.
 		action = BreakMandatory
+		return
+	}
+
+	if s.pos == 0 {
+		// LB2 Never break at the start of text.
+		s.prevClass = cls
+		action = BreakProhibited
 		return
 	}
 
