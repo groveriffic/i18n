@@ -46,6 +46,19 @@ func equalIntSlice(a, b []int) bool {
 	return true
 }
 
+func TestClass(t *testing.T) {
+	examples := map[rune]BreakClass{
+		'#': ClassAL,
+	}
+
+	for r, expected := range examples {
+		actual := Class(r)
+		if expected != actual {
+			t.Errorf("Class('%s') = %d; expected: %d\n", string(r), actual, expected)
+		}
+	}
+}
+
 func TestScanner(t *testing.T) {
 	bad := 0
 	for _, v := range lineBreakTests {
