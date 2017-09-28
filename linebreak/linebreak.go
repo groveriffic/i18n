@@ -284,12 +284,3 @@ func (s *Scanner) nextClass() (cls BreakClass, err error) {
 	}
 	return
 }
-
-// last finds the last line breaking action in the input.
-//
-// It can be called successively to find all actions until the start
-// of the input, when it returns io.EOF as error (really meaning SOF).
-func (s *Scanner) last() (pos int, action BreakAction, err error) {
-	// TODO
-	return
-}
